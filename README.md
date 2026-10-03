@@ -63,3 +63,4 @@ Some ideas for what this model could be used for:
 - could also see if hill climb wants a different ratio
 - the endgame version would be to set up each event in comp, relate the times back to points, and optimize the car across all the events so that you maximize predicted points in competition
 - everything in this model can probably be done better in CarSim, so if you've figured that out pretty well this might be obsolete. this can run quickly though for large sweeps and you could even parallelize it
+- if you could get really good traction data, you could even optimize weight (and weight transfer) such that you get close to the optimal slip ratio on softer terrain. Offroad tires want to slip a bit for max performance
