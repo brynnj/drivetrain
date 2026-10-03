@@ -10,12 +10,12 @@ BASE_VEHICLE = VehicleConfig(
             "C_rr": 0.014,
         },
         "tire": {
-            "r_t": 0.34,
+            "r_t": 0.2921,  # 23 in diameter
             "J_wheel_each": 0.25,
             "normal_load_fraction_each": 0.25,
             "driven_tire_count": 4,
             "burckhardt": {"B": 1.2801, "C": 23.99, "D": 0.52},
-            "relaxation_length": 0.2,
+            "relaxation_length": 0.1,
         },
         "engine": {
             "omega_idle": 1800.0, # RPM

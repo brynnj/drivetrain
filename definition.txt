@@ -47,7 +47,7 @@ Scope and limitations
 - Belt-slip and tire-slip power losses are implicit in the dynamics; their heat
   is not tracked as a state.
 - The tire model is a simplified longitudinal, load-independent empirical curve;
-  its terrain parameters and 0.2 m relaxation length are representative inputs,
+  its terrain parameters and 0.1 m relaxation length are representative inputs,
   not measured ATV-specific data.
 - At very low speed the relaxation speed is floored at 0.5 m/s so tire force can
   build during launch.
