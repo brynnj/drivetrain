@@ -1,0 +1,7 @@
+[project]
+name = "drivetrain"
+version = "0.1.0"
+description = "Straight-line CVT drivetrain acceleration model"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["numpy>=1.24", "plotly>=5.0"]

@@ -1,0 +1,54 @@
+Straight-line CVT vehicle acceleration model
+============================================
+
+Purpose
+-------
+Estimate acceleration performance from vehicle, engine, CVT, driveline, tire,
+and event-load inputs. Vehicle and wheel speeds evolve independently. The
+engine revs from idle to 2,400 RPM, then drives an ideal slipping CVT
+engagement until its belt speed matches the driven side.
+
+States and integration
+----------------------
+The runner advances vehicle speed, wheel speed, and longitudinal tire force with
+explicit Euler steps. Engine speed is a dynamic state while revving freely,
+held at 2,400 RPM during launch slip, and constrained by wheel speed and CVT
+ratio after belt lock. Steps are split at engagement and belt lock. Tire force
+uses an exact first-order relaxation update toward its Burckhardt steady-state
+target. Distance is integrated with the trapezoid rule.
+
+At each step
+------------
+1. Compute aerodynamic drag, rolling resistance, grade force, and event loads.
+2. Compute the distance-ramped brake load, if configured.
+3. Hold maximum CVT reduction until the belt locks. After lock, select a
+   bounded CVT ratio to target peak-power RPM.
+4. Compute engine torque and CVT engagement torque, then CVT efficiency and
+   downstream stage torques in sequence. In the locked mode, engine inertia
+   and the ratio-change term enter the coupled engine/wheel acceleration solve.
+5. Treat all four driven tires as one equivalent wheel with shared speed and
+total driveline torque. Each tire carries one quarter of vehicle weight; sum
+all driven tire loads and inertias. Burckhardt B/C/D parameters define the
+steady friction curve.
+Actual force approaches that target over the configured relaxation length.
+6. Advance vehicle, wheel, engine, and tire-force states. Vehicle speed is
+   clamped at zero; distance uses the trapezoid rule.
+
+Scope and limitations
+---------------------
+- CVT ratio selection is instantaneous and follows the launch/peak-power rule.
+- The engine starts at 1,800 RPM idle and revs freely to 2,400 RPM. While the
+  engagement slips at 2,400 RPM, all available engine torque passes through the
+  CVT at maximum reduction. Lock occurs when engine and driven belt speeds
+  match, without an instantaneous speed jump.
+- Belt-slip and tire-slip power losses are implicit in the dynamics; their heat
+  is not tracked as a state.
+- The tire model is a simplified longitudinal, load-independent empirical curve;
+  its terrain parameters and 0.2 m relaxation length are representative inputs,
+  not measured ATV-specific data.
+- At very low speed the relaxation speed is floored at 0.5 m/s so tire force can
+  build during launch.
+- No load transfer, belt torque capacity, belt thermal behavior, or finite CVT
+  shift rate is included. The torque transmitted at engagement starts abruptly.
+- The pilot-tow event applies 100 N of braking force per foot traveled and
+  stops its run after the vehicle remains stationary for one second.
