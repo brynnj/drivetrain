@@ -59,7 +59,7 @@ Some ideas for what this model could be used for:
 - optimizing a gearbox ratio, demonstrating towing improvements w/ the planetary
 - determining sensitivities (i.e. how worthwhile is it to shave 5% off the mass of the driveshafts, how much top speed could be gained with more optimal aero)
 - if you expand it to model weight transfer, optimizing accel & towing suspension setups on different terrains
-- you could also build a maneuver or endurance type track with distances of full throttle and distances of braking, and then compare different gear ratios for lap times
+- you could also build a maneuv or endurance type track with distances of full throttle and distances of braking, and then compare different gear ratios for lap times
 - could also see if hill climb wants a different ratio
 - the endgame version would be to set up each event in comp, relate the times back to points, and optimize the car across all the events so that you maximize predicted points in competition
 - everything in this model can probably be done better in CarSim, so if you've figured that out pretty well this might be obsolete. this can run quickly though for large sweeps and you could even parallelize it
