@@ -64,30 +64,13 @@ class AccelerationModel:
         self.i_cvt_vals = np.array([pt["ratio"] for pt in cvt_data])
         self.eta_cvt_vals = np.array([pt["eta"] for pt in cvt_data])
 
-    def _interp(
-        self, x: float, x_vals: np.ndarray, y_vals: np.ndarray, fill_value: str = "extrapolate"
-    ) -> float:
-        """Interpolate a curve; optionally extend its end slopes."""
-        if fill_value == "clip":
-            result = np.interp(x, x_vals, y_vals)
-        else:
-            if x <= x_vals[0]:
-                slope = (y_vals[1] - y_vals[0]) / (x_vals[1] - x_vals[0])
-                result = y_vals[0] + slope * (x - x_vals[0])
-            elif x >= x_vals[-1]:
-                slope = (y_vals[-1] - y_vals[-2]) / (x_vals[-1] - x_vals[-2])
-                result = y_vals[-1] + slope * (x - x_vals[-1])
-            else:
-                result = np.interp(x, x_vals, y_vals)
-        return float(result)
-
     def engine_torque(self, omega_e: float) -> float:
-        """Compute engine torque at given engine speed."""
-        return self._interp(omega_e, self.omega_e_vals, self.T_e_vals)
+        """Engine torque at RPM; stay at the curve endpoints outside its range."""
+        return float(np.interp(omega_e, self.omega_e_vals, self.T_e_vals))
 
     def cvt_efficiency(self, i_cvt: float) -> float:
         """Compute CVT efficiency at given ratio."""
-        return self._interp(i_cvt, self.i_cvt_vals, self.eta_cvt_vals, fill_value="clip")
+        return float(np.interp(i_cvt, self.i_cvt_vals, self.eta_cvt_vals))
 
     def _rpm_from_rad_s(self, omega: float) -> float:
         return omega * 60.0 / (2.0 * np.pi)

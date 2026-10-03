@@ -25,6 +25,7 @@ BASE_VEHICLE = VehicleConfig(
                 {"omega": 2400.0, "torque": 25.77},
                 {"omega": 3150.0, "torque": 21.48},
                 {"omega": 3800, "torque": 10.74},
+                {"omega": 3900, "torque": 0},  # Restrictor fade after 3800 RPM
             ],
             "omega_launch": 2400.0,
             "omega_pp": 3150.0,

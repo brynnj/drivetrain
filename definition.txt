@@ -37,6 +37,9 @@ Actual force approaches that target over the configured relaxation length.
 Scope and limitations
 ---------------------
 - CVT ratio selection is instantaneous and follows the launch/peak-power rule.
+- The engine curve drops from its 3,800 RPM torque to zero at 3,900 RPM and
+  remains at zero above that. This limits drive torque, not engine speed: a
+  locked drivetrain can back-drive the engine above 3,900 RPM.
 - The engine starts at 1,800 RPM idle and revs freely to 2,400 RPM. While the
   engagement slips at 2,400 RPM, all available engine torque passes through the
   CVT at maximum reduction. Lock occurs when engine and driven belt speeds
