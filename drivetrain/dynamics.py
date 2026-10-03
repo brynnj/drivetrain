@@ -19,14 +19,10 @@ class StepResult:
     F_x: float
     F_x_steady: float
     tire_relaxation_speed: float
-    F_x_required: float
     F_x_peak: float
-    slip_ratio: float
     F_resist: float
     i_cvt: float
-    F_wheel_equiv: float  # Wheel torque / radius, before tire grip
     torque_stages: dict[str, float]
-    inertia_contributions: dict[str, float]
 
 
 class AccelerationModel:
@@ -43,7 +39,7 @@ class AccelerationModel:
 
         self.total_ratio = float(np.prod([stage["ratio"] for stage in self.stages]))
         self.stage_torque_factor = float(np.prod([stage["ratio"] * stage["eta"] for stage in self.stages]))
-        self.J_downstream, self.fixed_inertia = self.compute_reflected_inertia()
+        self.J_downstream = self.compute_reflected_inertia()
         self._build_curves()
 
     def _build_curves(self) -> None:
@@ -89,25 +85,15 @@ class AccelerationModel:
         mu = self.burckhardt_B * (1.0 - np.exp(-self.burckhardt_C * slip_magnitude)) - self.burckhardt_D * slip_magnitude
         return max(float(mu), 0.0)
 
-    def compute_reflected_inertia(self) -> tuple[float, dict[str, float]]:
+    def compute_reflected_inertia(self) -> float:
         """Sum wheel and fixed-stage inertias at the wheel shaft."""
-        contributions: dict[str, float] = {}
-        J_wheel = self.cfg.tire.J_wheel_each * self.cfg.tire.driven_tire_count
-        contributions["wheel"] = J_wheel
-        J_eq = J_wheel
+        J_eq = self.cfg.tire.J_wheel_each * self.cfg.tire.driven_tire_count
 
         downstream_ratio = self.total_ratio
         for stage in self.stages:
-            J_stage = stage.get("J", 0.0)
-            stage_name = stage.get("name", "unnamed_stage")
-            stage_contribution = J_stage * (downstream_ratio**2)
-            contributions[f"stage:{stage_name}"] = stage_contribution
-            J_eq += stage_contribution
-            stage_ratio = stage.get("ratio", 1.0)
-            downstream_ratio /= stage_ratio if stage_ratio != 0 else 1.0
-
-        contributions["total"] = J_eq
-        return J_eq, contributions
+            J_eq += stage.get("J", 0.0) * downstream_ratio**2
+            downstream_ratio /= stage["ratio"]
+        return J_eq
 
     def engagement_wheel_speed(self) -> float:
         """Wheel speed where the low-ratio belt speeds match at launch RPM."""
@@ -186,7 +172,6 @@ class AccelerationModel:
         engine_inertia = cfg.driveline.J_engine
         engine_contribution = wheel_torque_factor * engine_inertia * h if mode == "locked" else 0.0
         J_effective = J_downstream + engine_contribution
-        inertia_contributions = {**self.fixed_inertia, "engine": engine_contribution, "total": J_effective}
 
         if mode == "free":
             T_belt = 0.0
@@ -201,22 +186,12 @@ class AccelerationModel:
             omega_e_dot = h * domega_w_dt
             T_belt = T_engine - engine_inertia * omega_e_dot
 
-        torque_stages = {"engine": T_engine, "after_engagement": T_belt}
-        T_after_cvt = T_belt * i_cvt * eta_cvt
-        torque_stages["after_cvt"] = T_after_cvt
-        T_current = T_after_cvt
-        for stage in self.stages:
-            T_current *= stage["ratio"] * stage["eta"]
-            torque_stages[f"after_{stage['name']}"] = T_current
+        torque_stages = {
+            "engine": T_engine,
+            "after_engagement": T_belt,
+            "wheel": T_belt * wheel_torque_factor,
+        }
 
-        T_wheel = T_current
-        torque_stages["wheel"] = T_wheel
-        F_wheel_equiv = T_wheel / r_t
-
-        # Force needed for equal wheel and ground acceleration is diagnostic.
-        rolling_drive_torque = wheel_torque_factor * T_engine if mode == "locked" else T_wheel
-        a_rolling = (rolling_drive_torque / r_t - F_resist) / (m_total + J_effective / r_t**2)
-        F_x_rolling = m_total * a_rolling + F_resist
         dv_dt = (F_x - F_resist) / m_total
 
         # A brake can hold the vehicle at rest but cannot push it backward.
@@ -231,12 +206,8 @@ class AccelerationModel:
             F_x=F_x,
             F_x_steady=F_x_steady,
             tire_relaxation_speed=tire_relaxation_speed,
-            F_x_required=F_x_rolling,
             F_x_peak=F_peak,
-            slip_ratio=slip_ratio,
             F_resist=F_resist,
             i_cvt=i_cvt,
-            F_wheel_equiv=F_wheel_equiv,
             torque_stages=torque_stages,
-            inertia_contributions=inertia_contributions,
         )

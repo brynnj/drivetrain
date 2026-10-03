@@ -32,13 +32,12 @@ def dynamic_figure(distance, v, acceleration, omega_w):
     return fig
 
 
-def force_figure(distance, tire_force, resistance, wheel_torque_force):
+def force_figure(distance, tire_force, resistance):
     fig = go.Figure()
     for values, label in (
         (tire_force, "Tire Force [N]"),
         (resistance, "Resistance [N]"),
         (tire_force - resistance, "Net Vehicle Force [N]"),
-        (wheel_torque_force, "Wheel Torque / Tire Radius [N]"),
     ):
         fig.add_trace(go.Scatter(x=distance, y=values, name=label))
     fig.update_layout(title="Forces", xaxis_title="Distance [m]", yaxis_title="Force [N]",
@@ -53,20 +52,6 @@ def torque_figure(distance, torque_stages):
         fig.add_trace(go.Scatter(x=distance, y=values, name=stage.replace("_", " ").title()))
     fig.update_layout(title="Driveline Torques", xaxis_title="Distance [m]",
                       yaxis_title="Torque [N·m]", height=600, hovermode="x unified")
-    return fig
-
-
-def inertia_figure(contributions):
-    rows = []
-    for name in contributions[0]:
-        values = np.array([step[name] for step in contributions])
-        rows.append((name, *[f"{value:.3f}" for value in
-                            (values[0], values.min(), values.mean(), values.max(), values[-1])]))
-    fig = go.Figure(go.Table(
-        header=dict(values=["Contribution", "Initial", "Min", "Mean", "Max", "Final"]),
-        cells=dict(values=list(zip(*rows))),
-    ))
-    fig.update_layout(title="Reflected Inertia [kg·m²]", height=max(400, 36 * (len(rows) + 2)))
     return fig
 
 
@@ -102,7 +87,6 @@ def tire_figure(distance, result):
     fig.add_trace(go.Scatter(x=distance, y=result["v"], name="Ground Speed [m/s]"), row=1, col=1)
     fig.add_trace(go.Scatter(x=distance, y=tangent_speed, name="Wheel Tangent Speed [m/s]"), row=1, col=1)
     for key, label, dash in (
-        ("F_x_required", "Required for No Slip [N]", None),
         ("F_x", "Tire Force Supplied [N]", None),
         ("F_x_steady", "Steady Tire Force [N]", "dot"),
         ("F_x_peak", "Peak Traction [N]", "dash"),
@@ -121,9 +105,8 @@ def generate_all_plots(result, output_dir="plots"):
     distance = compute_distance(result["t"], result["v"])
     figures = (
         dynamic_figure(distance, result["v"], result["a"], result["omega_w"]),
-        force_figure(distance, result["F_x"], result["F_resist"], result["F_wheel_equiv"]),
+        force_figure(distance, result["F_x"], result["F_resist"]),
         torque_figure(distance, result["torque_stages"]),
-        inertia_figure(result["inertia_contributions"]),
         cvt_figure(distance, result),
         tire_figure(distance, result),
     )

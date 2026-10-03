@@ -37,9 +37,8 @@ def _integrate(
     """Integrate speed in m/s, angular speeds in rad/s, and distance in meters."""
     history = {name: [] for name in (
         "t", "distance", "v", "omega_w", "omega_e", "engagement_mode",
-        "a", "i_cvt", "F_x", "F_x_steady", "F_x_required", "F_x_peak",
-        "F_resist", "F_wheel_equiv", "slip_ratio", "torque_stages",
-        "inertia_contributions",
+        "a", "i_cvt", "F_x", "F_x_steady", "F_x_peak",
+        "F_resist", "torque_stages",
     )}
     t = distance = v = omega_w = 0.0
     omega_e = model._rad_s_from_rpm(model.omega_idle)
@@ -55,10 +54,8 @@ def _integrate(
             "omega_e": result.engine_rpm, "engagement_mode": mode,
             "a": result.dv_dt, "i_cvt": result.i_cvt,
             "F_x": result.F_x, "F_x_steady": result.F_x_steady,
-            "F_x_required": result.F_x_required, "F_x_peak": result.F_x_peak,
-            "F_resist": result.F_resist, "F_wheel_equiv": result.F_wheel_equiv,
-            "slip_ratio": result.slip_ratio, "torque_stages": result.torque_stages,
-            "inertia_contributions": result.inertia_contributions,
+            "F_x_peak": result.F_x_peak,
+            "F_resist": result.F_resist, "torque_stages": result.torque_stages,
         }
         for name, value in sample.items():
             history[name].append(value)
@@ -96,7 +93,7 @@ def _integrate(
             break
 
     result = {
-        name: values if name in {"torque_stages", "inertia_contributions"} else np.array(values)
+        name: values if name == "torque_stages" else np.array(values)
         for name, values in history.items()
     }
     result["meta"] = {
